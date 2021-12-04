@@ -3,6 +3,18 @@
 # Exit immediately on error
 set -e
 
+# Read .rotate-backups.ini
+ROTATE_HOURLY=$(cat /config/rotate-backups.ini | grep hourly | grep -o -E '[0-9]+')
+ROTATE_HOURLY="${ROTATE_HOURLY:-$(cat /config/rotate-backups.ini | grep hourly | grep -o -E 'always')}"
+ROTATE_DAILY=$(cat /config/rotate-backups.ini | grep daily | grep -o -E '[0-9]+')
+ROTATE_DAILY="${ROTATE_DAILY:-$(cat /config/rotate-backups.ini | grep daily | grep -o -E 'always')}"
+ROTATE_WEEKLY=$(cat /config/rotate-backups.ini | grep weekly | grep -o -E '[0-9]+')
+ROTATE_WEEKLY="${ROTATE_WEEKLY:-$(cat /config/rotate-backups.ini | grep weekly | grep -o -E 'always')}"
+ROTATE_MONTHLY=$(cat /config/rotate-backups.ini | grep monthly | grep -o -E '[0-9]+')
+ROTATE_MONTHLY="${ROTATE_MONTHLY:-$(cat /config/rotate-backups.ini | grep monthly | grep -o -E 'always')}"
+ROTATE_YEARLY=$(cat /config/rotate-backups.ini | grep yearly | grep -o -E '[0-9]+')
+ROTATE_YEARLY="${ROTATE_YEARLY:-$(cat /config/rotate-backups.ini | grep yearly | grep -o -E 'always')}"
+
 # Write cronjob env to file, fill in sensible defaults, and read them back in
 cat <<EOF > env.sh
 BACKUP_SOURCES="${BACKUP_SOURCES:-/backup}"
@@ -25,6 +37,12 @@ INFLUXDB_DB="${INFLUXDB_DB:-}"
 INFLUXDB_CREDENTIALS="${INFLUXDB_CREDENTIALS:-}"
 INFLUXDB_MEASUREMENT="${INFLUXDB_MEASUREMENT:-docker_volume_backup}"
 BACKUP_CUSTOM_LABEL="${BACKUP_CUSTOM_LABEL:-}"
+ROTATE_BACKUPS="${ROTATE_BACKUPS:-}"
+ROTATE_HOURLY="${ROTATE_HOURLY:-0}"
+ROTATE_DAILY="${ROTATE_DAILY:-0}"
+ROTATE_WEEKLY="${ROTATE_WEEKLY:-0}"
+ROTATE_MONTHLY="${ROTATE_MONTHLY:-0}"
+ROTATE_YEARLY="${ROTATE_YEARLY:-0}"
 EOF
 chmod a+x env.sh
 source env.sh

@@ -1,0 +1,23 @@
+version: "3"
+
+services:
+
+  dashboard:
+    image: grafana/grafana:7.4.5
+    volumes:
+      - grafana-data:/var/lib/grafana           # This is where Grafana keeps its data
+
+  backup:
+#    build: ../..
+    image: dvb:scp-rot
+    environment:
+      SCP_HOST: 192.168.0.4                    # Remote host IP address
+      SCP_USER: pi                              # Remote host user to log in
+      SCP_DIRECTORY: /home/pi/backups           # Remote host directory
+      ROTATE_BACKUPS: "dry-run"                    # You can also test your configuration beforehand by peforming a "dry-run". See container logs for information on the dry-run.
+    volumes:
+      - grafana-data:/backup/grafana-data:ro    # Mount the Grafana data volume (as read-only)
+      - ~/.ssh/id_rsa:/ssh/id_rsa:ro            # Mount the SSH private key (as read-only)
+
+volumes:
+  grafana-data:
