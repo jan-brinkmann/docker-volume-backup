@@ -299,6 +299,7 @@ environment:
 ```
 
 In order to test your custom configuration, set `ROTATE_BACKUPS: dry-run` and see the result in the container logs when the backup routine has been triggered (either by cron or by [executing backup.sh manually](#triggering-a-backup-manually)).
+Bear in mind, that `rotate-backups` must be installed on the remote host.
 
 ### Rotation for S3 backups
 
