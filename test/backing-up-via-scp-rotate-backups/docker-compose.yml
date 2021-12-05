@@ -14,7 +14,7 @@ services:
       SCP_USER: pi                              # Remote host user to log in
       SCP_DIRECTORY: /home/pi/backups           # Remote host directory
       ROTATE_BACKUPS: dry-run                   # You can also test your configuration beforehand by peforming a "dry-run". See container logs for information on the dry-run.
-      ROTATE_HOURLY: 0                          # Here you can see the default values of ROTATE_*. You can customize them here.
+      ROTATE_HOURLY: 0                          # Here, you can see the default values of ROTATE_*. You can customize them by means of setting the respective environmentel variables.
       ROTATE_DAILY: 7
       ROTATE_WEEKLY: 4
       ROTATE_MONTHLY: 12

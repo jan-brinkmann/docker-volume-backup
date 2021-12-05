@@ -114,11 +114,9 @@ if [ ! -z "$SCP_HOST" ]; then
   TIME_UPLOADED="$(date +%s.%N)"
   if [ "$ROTATE_BACKUPS" == "true" ]; then
     info "Rotate backups"
-    #/usr/local/bin/rotate-backups -c /config/.rotate-backups.ini $BACKUP_ARCHIVE
     ssh -o StrictHostKeyChecking=no -i /ssh/id_rsa $SCP_USER@$SCP_HOST rotate-backups --hourly $ROTATE_HOURLY --daily $ROTATE_DAILY --weekly $ROTATE_WEEKLY --monthly $ROTATE_MONTHLY --yearly $ROTATE_YEARLY $SCP_DIRECTORY
   elif [ "$ROTATE_BACKUPS" == "dry-run" ]; then
     info "Rotate backups"
-    #/usr/local/bin/rotate-backups --dry-run -c /config/.rotate-backups.ini $BACKUP_ARCHIVE
     ssh -o StrictHostKeyChecking=no -i /ssh/id_rsa $SCP_USER@$SCP_HOST rotate-backups --dry-run --hourly $ROTATE_HOURLY --daily $ROTATE_DAILY --weekly $ROTATE_WEEKLY --monthly $ROTATE_MONTHLY --yearly $ROTATE_YEARLY $SCP_DIRECTORY
   fi
 fi
