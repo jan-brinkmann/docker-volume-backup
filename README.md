@@ -234,7 +234,7 @@ Variable | Default | Notes
 `BACKUP_HOSTNAME` | `$(hostname)` | Name of the host (i.e. Docker container) in which the backup runs. Mostly useful if you want a specific hostname to be associated with backup metrics (see InfluxDB support).
 `BACKUP_CUSTOM_LABEL` |  | When provided, the [start/stop](#stopping-containers-while-backing-up) and [pre/post exec](#prepost-backup-exec) logic only applies to containers with this custom label.
 `ROTATE_BACKUPS` |  | Set to `true` in order to make use of integrated package [rotate-backups](https://github.com/xolox/python-rotate-backups). The package preserves a defined set of essential backups and eliminates redundant backups.
-`ROTATE_HOURLY` | 0 | Hourly backps to keep. Can be any integer or `always`.
+`ROTATE_HOURLY` | | Hourly backps to keep. Can be any integer or `always`.
 `ROTATE_DAILY` | 7 | Daily backps to keep. Can be any integer or `always`.
 `ROTATE_WEEKLY` | 4 | Weekly backps to keep. Can be any integer or `always`.
 `ROTATE_MONTHLY` | 12 | Monthly backps to keep. Can be any integer or `always`.

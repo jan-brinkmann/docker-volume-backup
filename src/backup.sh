@@ -112,12 +112,17 @@ if [ ! -z "$SCP_HOST" ]; then
   scp -ro StrictHostKeyChecking=no -i /ssh/id_rsa $BACKUP_FILENAME $SCP_USER@$SCP_HOST:$SCP_DIRECTORY
   echo "Upload finished"
   TIME_UPLOADED="$(date +%s.%N)"
+  if [ ! -z "$ROTATE_BACKUPS" ]; then
+	info "Rotate backups"
+    ROTATE_BACKUPS_COMMAND="ssh -o StrictHostKeyChecking=no -i /ssh/id_rsa $SCP_USER@$SCP_HOST rotate-backups --daily $ROTATE_DAILY --weekly $ROTATE_WEEKLY --monthly $ROTATE_MONTHLY --yearly $ROTATE_YEARLY"
+  fi
+  if [ ! -z "$ROTATE_HOURLY" ]; then
+	ROTATE_BACKUPS_COMMAND="$ROTATE_BACKUPS_COMMAND --hourly $ROTATE_HOURLY"
+  fi
   if [ "$ROTATE_BACKUPS" == "true" ]; then
-    info "Rotate backups"
-    ssh -o StrictHostKeyChecking=no -i /ssh/id_rsa $SCP_USER@$SCP_HOST rotate-backups --hourly $ROTATE_HOURLY --daily $ROTATE_DAILY --weekly $ROTATE_WEEKLY --monthly $ROTATE_MONTHLY --yearly $ROTATE_YEARLY $SCP_DIRECTORY
+    $ROTATE_BACKUPS_COMMAND $SCP_DIRECTORY
   elif [ "$ROTATE_BACKUPS" == "dry-run" ]; then
-    info "Rotate backups"
-    ssh -o StrictHostKeyChecking=no -i /ssh/id_rsa $SCP_USER@$SCP_HOST rotate-backups --dry-run --hourly $ROTATE_HOURLY --daily $ROTATE_DAILY --weekly $ROTATE_WEEKLY --monthly $ROTATE_MONTHLY --yearly $ROTATE_YEARLY $SCP_DIRECTORY
+    $ROTATE_BACKUPS_COMMAND "--dry-run" $SCP_DIRECTORY
   fi
 fi
 
