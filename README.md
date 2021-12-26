@@ -239,6 +239,7 @@ Variable | Default | Notes
 `ROTATE_WEEKLY` | 4 | Weekly backps to keep. Can be any integer or `always`.
 `ROTATE_MONTHLY` | 12 | Monthly backps to keep. Can be any integer or `always`.
 `ROTATE_YEARLY` | always | Yearly backps to keep. Can be any integer or `always`.
+`CHECK_HOST` |  | When provided, the availability of the named host will be checked. The host should be the destination host of the backups. If the host is available, the backup is conducted as normal. Else, the backup is skipped.
 `AWS_S3_BUCKET_NAME` |  | When provided, the resulting backup file will be uploaded to this S3 bucket after the backup has ran.
 `AWS_GLACIER_VAULT_NAME` |  | When provided, the resulting backup file will be uploaded to this AWS Glacier vault after the backup has ran.
 `AWS_ACCESS_KEY_ID` |  | Required when using `AWS_S3_BUCKET_NAME`.
