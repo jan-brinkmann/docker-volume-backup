@@ -129,14 +129,6 @@ if [ ! -z "$SCP_HOST" ]; then
     echo "Post-scp command: $POST_SCP_COMMAND"
     ssh $SSH_CONFIG $SCP_USER@$SCP_HOST $POST_SCP_COMMAND
   fi
-  if [ "$ROTATE_BACKUPS" == "true" ] || [ "$ROTATE_BACKUPS" == "dry-run" ]; then
-	  info "Rotate backups"
-	  ROTATE_BACKUPS_CONFIG="rotate-backups --hourly $ROTATE_HOURLY --daily $ROTATE_DAILY --weekly $ROTATE_WEEKLY --monthly $ROTATE_MONTHLY --yearly $ROTATE_YEARLY"
-    if [ "$ROTATE_BACKUPS" == "dry-run" ]; then
-	    ROTATE_BACKUPS_CONFIG="$ROTATE_BACKUPS_CONFIG --dry-run"
-    fi
-    ssh $SSH_CONFIG $SCP_USER@$SCP_HOST $ROTATE_BACKUPS_CONFIG $SCP_DIRECTORY
-  fi
 fi
 
 if [ -d "$BACKUP_ARCHIVE" ]; then
@@ -149,16 +141,23 @@ if [ -d "$BACKUP_ARCHIVE" ]; then
   if (($BACKUP_UID > 0)); then
     chown -v $BACKUP_UID:$BACKUP_GID "$BACKUP_ARCHIVE/$BACKUP_FILENAME"
   fi
-  if [ "$ROTATE_BACKUPS" == "true" ]; then
-    info "Rotate backups"
-    /usr/local/bin/rotate-backups -c /config/.rotate-backups.ini $BACKUP_ARCHIVE
-  elif [ "$ROTATE_BACKUPS" == "dry-run" ]; then
-    info "Rotate backups"
-    /usr/local/bin/rotate-backups --dry-run -c /config/.rotate-backups.ini $BACKUP_ARCHIVE
-  fi
   if [ ! -z "$POST_COMMAND" ]; then
     echo "Post command: $POST_COMMAND"
     $POST_COMMAND
+  fi
+fi
+
+if [ "$ROTATE_BACKUPS" == "true" ] || [ "$ROTATE_BACKUPS" == "dry-run" ]; then
+  info "rotate-backups"
+  ROTATE_BACKUPS_CONFIG="--hourly $ROTATE_HOURLY --daily $ROTATE_DAILY --weekly $ROTATE_WEEKLY --monthly $ROTATE_MONTHLY --yearly $ROTATE_YEARLY"
+  if [ "$ROTATE_BACKUPS" == "dry-run" ]; then
+   	ROTATE_BACKUPS_CONFIG="$ROTATE_BACKUPS_CONFIG --dry-run"
+  fi
+  if [ ! -z "$SCP_HOST" ]; then
+    ssh $SSH_CONFIG $SCP_USER@$SCP_HOST rotate-backups $ROTATE_BACKUPS_CONFIG $SCP_DIRECTORY
+  fi
+  if [ -d "$BACKUP_ARCHIVE" ]; then
+    /usr/local/bin/rotate-backups $ROTATE_BACKUPS_CONFIG $BACKUP_ARCHIVE
   fi
 fi
 
