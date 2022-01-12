@@ -16,7 +16,6 @@ RUN sh get-docker.sh
 
 COPY ./src/entrypoint.sh /root/
 COPY ./src/backup.sh /root/
-COPY ./src/.rotate-backups.ini /config/
 RUN chmod a+x /root/entrypoint.sh
 RUN chmod a+x /root/backup.sh
 

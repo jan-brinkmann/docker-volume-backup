@@ -149,15 +149,15 @@ fi
 
 if [ "$ROTATE_BACKUPS" == "true" ] || [ "$ROTATE_BACKUPS" == "dry-run" ]; then
   info "rotate-backups"
-  ROTATE_BACKUPS_CONFIG="--hourly $ROTATE_HOURLY --daily $ROTATE_DAILY --weekly $ROTATE_WEEKLY --monthly $ROTATE_MONTHLY --yearly $ROTATE_YEARLY"
+  ROTATION_SCHEME="--hourly $ROTATE_HOURLY --daily $ROTATE_DAILY --weekly $ROTATE_WEEKLY --monthly $ROTATE_MONTHLY --yearly $ROTATE_YEARLY"
   if [ "$ROTATE_BACKUPS" == "dry-run" ]; then
-   	ROTATE_BACKUPS_CONFIG="$ROTATE_BACKUPS_CONFIG --dry-run"
+   	ROTATION_SCHEME="$ROTATION_SCHEME --dry-run"
   fi
   if [ ! -z "$SCP_HOST" ]; then
-    ssh $SSH_CONFIG $SCP_USER@$SCP_HOST rotate-backups $ROTATE_BACKUPS_CONFIG $SCP_DIRECTORY
+    ssh $SSH_CONFIG $SCP_USER@$SCP_HOST rotate-backups $ROTATION_SCHEME $SCP_DIRECTORY
   fi
   if [ -d "$BACKUP_ARCHIVE" ]; then
-    /usr/local/bin/rotate-backups $ROTATE_BACKUPS_CONFIG $BACKUP_ARCHIVE
+    /usr/local/bin/rotate-backups $ROTATION_SCHEME $BACKUP_ARCHIVE
   fi
 fi
 
