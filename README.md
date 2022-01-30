@@ -4,10 +4,11 @@ Docker image for performing simple backups of Docker volumes. Main features:
 
 - Mount volumes into the container, and they'll get backed up
 - Use full `cron` expressions for scheduling the backups
-- Backs up to local disk, [AWS S3](https://aws.amazon.com/s3/), or both
+- Backs up to local disk, to remote host available via `scp`, to [AWS S3](https://aws.amazon.com/s3/), or to all of them
 - Allows triggering a backup manually if needed
 - Optionally stops containers for the duration of the backup, and starts them again afterward, to ensure consistent backups
 - Optionally `docker exec`s commands before/after backing up a container, to allow easy integration with database backup tools, for example
+- Optionally executes commands before/after backing up inside `docker-volume-backup` container and/or on remote host
 - Optionally ships backup metrics to [InfluxDB](https://docs.influxdata.com/influxdb/), for monitoring
 - Optionally encrypts backups with `gpg` before uploading
 
@@ -228,8 +229,8 @@ Variable | Default | Notes
 `BACKUP_CRON_EXPRESSION` | `@daily` | Standard debian-flavored `cron` expression for when the backup should run. Use e.g. `0 4 * * *` to back up at 4 AM every night. See the [man page](http://man7.org/linux/man-pages/man8/cron.8.html) or [crontab.guru](https://crontab.guru/) for more.
 `BACKUP_FILENAME` | `backup-%Y-%m-%dT%H-%M-%S.tar.gz` | File name template for the backup file. Is passed through `date` for formatting. See the [man page](http://man7.org/linux/man-pages/man1/date.1.html) for more.
 `BACKUP_ARCHIVE` | `/archive` | When this path is available within the container (i.e. you've mounted a Docker volume there), a finished backup file will get archived there after each run.
-`PRE_COMMAND` |  | Commands that is executed before the backup is transferred to `/archive`.
-`POST_COMMAND` |  | Commands that is executed after the backup has been transferred to `/archive`.
+`PRE_BACKUP_COMMAND` |  | Commands that is executed before the backup is created.
+`POST_BACKUP_COMMAND` |  | Commands that is executed after the backup has been transferred.
 `BACKUP_UID` | `root (0)` | After backup file has been moved to archive location the file user ownership is changed to this UID.
 `BACKUP_GID` | `$BACKUP_UID` | After backup file has been moved to archive location the file group ownership is changed to this GID.
 `BACKUP_WAIT_SECONDS` | `0` | The backup script will sleep this many seconds between re-starting stopped containers, and proceeding with archiving/uploading the backup. This can be useful if you don't want the load/network spike of a large upload immediately after the load/network spike of container startup.
@@ -276,18 +277,36 @@ If so configured, they can also be shipped to an InfluxDB instance. This allows 
 
 ## Automatic backup rotation
 
-You probably don't want to keep all backups forever. A more common strategy is to hold onto a few recent ones, and remove older ones as they become irrelevant. There's no built-in support for this in `docker-volume-backup`, but if you transfer your backups via SCP to a remote host, you can trigger the rotate-backups script by means of setting the environmental variable `POST_SCP_COMMAND`.
+You probably don't want to keep all backups forever. A more common strategy is to hold onto a few recent ones, and remove older ones as they become irrelevant. There's no built-in support for this in `docker-volume-backup`, but you are able to trigger an external Docker container that includes [`rotate-backups`](https://pypi.org/project/rotate-backups/). In the examples, we draw on [docker-rotate-backups](https://github.com/jan-brinkmann/docker-rotate-backups).
+
+In order to start an external Docker container, access to `docker.sock` has to be granted (as already seen in in the section on [stopping containers while backing up](#stopping-containers-while-backing-up)). Then, `docker-rotate-backups` can be run on local directories as well as on remote directories.
+
+The default rotation scheme implemented in `docker-rotate-backups` preserves seven daily, four weekly, twelve monthly, and every yearly backups. For detailed information on customizing the rotation scheme, we refer to the [documentation](https://github.com/jan-brinkmann/docker-rotate-backups#how-to-customize).
 
 ### Rotation for local backups
 
-Check out these utilities, for example:
-
-* https://rotate-backups.readthedocs.io/en/latest/
-* https://github.com/xolox/python-rotate-backups
+Let `/home/pi/backups` be the path to your local backups. Then, initialize the environmental variable `POST_BACKUP_COMMAND` with the following command.
+```
+environment:
+  POST_BACKUP_COMMAND: "docker run --rm -e DRY_RUN=false -v /home/pi/backups:/archive ghcr.io/jan-brinkmann/docker-rotate-backups"
+volumes:
+  - /var/run/docker.sock:/var/run/docker.sock:ro
+  - /home/pi/backups:/archive
+```
 
 ### Rotation for backups tranferred via SCP
 
-If you like to trigger `rotate-backups` on a remote host, install `rotate-backups` on the remote host (i.e., by means of `sudo pip install rotate-backups`). Then, follow the instructions for [backing up to remote host by means of SCP](#backing-up-to-remote-host-by-means-of-scp). Finally, set the environmental variable `POST_SCP_COMMAND: rotate-backups --daily 7 --weekly 4 --monthly 12 --yearly always /backup-directory` (where `/backup-directory` is the directory on the remote host where your backups has been transferred to). The suggested configuration preserves zero hourly, seven daily, four weekly, twelve monthly and unlimited yearly backups. 
+Here, let `/home/pi/backups` be the backup directory on a remote host. To run `docker-rotate-backups` on that directory, the command in `POST_BACKUP_COMMAND` has to include all necessary information in order to access the remote host by means of SSH. Remember, if you transfer your [backups by means of SCP](#backing-up-to-remote-host-by-means-of-scp), all information in `SSH_USER`, `SSH_HOST`, `SSH_ARCHIVE`, and the SSH public key are already available.
+```
+environment:
+  SCP_HOST: 192.168.0.42
+  SCP_USER: pi
+  SCP_DIRECTORY: /path/to/backups
+  POST_BACKUP_COMMAND: "docker run --rm -e DRY_RUN=false -e SSH_USER=pi -e SSH_HOST=192.168.0.42 -e SSH_ARCHIVE=/home/pi/backups -v /home/pi/.ssh/id_rsa:/root/.ssh/id_rsa:ro ghcr.io/jan-brinkmann/docker-rotate-backups"
+volumes:
+  - /var/run/docker.sock:/var/run/docker.sock:ro
+  - /home/pi/.ssh/id_rsa:/ssh/id_rsa:ro
+```
 
 ### Rotation for S3 backups
 
